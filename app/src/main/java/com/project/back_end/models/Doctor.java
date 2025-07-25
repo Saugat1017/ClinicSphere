@@ -14,6 +14,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
+
+import java.time.LocalTime;
 import java.util.List;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -50,7 +52,7 @@ public class Doctor {
     private String phone;
 
     @ElementCollection
-    private List<String> availableTimes;
+    private List<LocalTime> availableTimes;
 
 
 }

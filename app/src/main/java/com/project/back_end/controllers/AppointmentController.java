@@ -1,48 +1,86 @@
 package com.project.back_end.controllers;
 
+import com.project.back_end.models.Appointment;
+import com.project.back_end.services.AppointmentService;
+import com.project.back_end.services.Service;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@RestController
+@RequestMapping("/appointments")
+@RequiredArgsConstructor
 public class AppointmentController {
 
-// 1. Set Up the Controller Class:
-//    - Annotate the class with `@RestController` to define it as a REST API controller.
-//    - Use `@RequestMapping("/appointments")` to set a base path for all appointment-related endpoints.
-//    - This centralizes all routes that deal with booking, updating, retrieving, and canceling appointments.
+    private final AppointmentService appointmentService;
+    private final Service sharedService;
 
+    // 1. Book an appointment (patient only)
+    @PostMapping("/book/{token}")
+    public ResponseEntity<?> bookAppointment(@PathVariable String token, @Valid @RequestBody Appointment appointment) {
+        if (!sharedService.validateToken(token, "patient")) {
+            return ResponseEntity.status(401).body("Invalid or expired token");
+        }
 
-// 2. Autowire Dependencies:
-//    - Inject `AppointmentService` for handling the business logic specific to appointments.
-//    - Inject the general `Service` class, which provides shared functionality like token validation and appointment checks.
+        int result = appointmentService.bookAppointment(appointment, token);
+        return result == 1 ? ResponseEntity.ok("Appointment booked successfully")
+                : ResponseEntity.status(500).body("Booking failed");
+    }
 
+    // 2. Update an appointment (patient only)
+    @PutMapping("/update/{token}")
+    public ResponseEntity<?> updateAppointment(@PathVariable String token, @Valid @RequestBody Appointment appointment) {
+        if (!sharedService.validateToken(token, "patient")) {
+            return ResponseEntity.status(401).body("Invalid or expired token");
+        }
 
-// 3. Define the `getAppointments` Method:
-//    - Handles HTTP GET requests to fetch appointments based on date and patient name.
-//    - Takes the appointment date, patient name, and token as path variables.
-//    - First validates the token for role `"doctor"` using the `Service`.
-//    - If the token is valid, returns appointments for the given patient on the specified date.
-//    - If the token is invalid or expired, responds with the appropriate message and status code.
+        String result = appointmentService.updateAppointment(appointment.getId(), appointment, token);
+        return ResponseEntity.ok(result);
+    }
 
+    // 3. Cancel an appointment (patient only)
+    @DeleteMapping("/cancel/{id}/{token}")
+    public ResponseEntity<?> cancelAppointment(@PathVariable Long id, @PathVariable String token) {
+        if (!sharedService.validateToken(token, "patient")) {
+            return ResponseEntity.status(401).body("Invalid or expired token");
+        }
 
-// 4. Define the `bookAppointment` Method:
-//    - Handles HTTP POST requests to create a new appointment.
-//    - Accepts a validated `Appointment` object in the request body and a token as a path variable.
-//    - Validates the token for the `"patient"` role.
-//    - Uses service logic to validate the appointment data (e.g., check for doctor availability and time conflicts).
-//    - Returns success if booked, or appropriate error messages if the doctor ID is invalid or the slot is already taken.
+        String result = appointmentService.cancelAppointment(id, token);
+        return ResponseEntity.ok(result);
+    }
 
+    // 4. Doctor views appointments (filtered by date and patient name)
+    @GetMapping("/view/{token}")
+    public ResponseEntity<?> getAppointments(
+            @PathVariable String token,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) String patientName
+    ) {
+        if (!sharedService.validateToken(token, "doctor")) {
+            return ResponseEntity.status(401).body("Invalid or expired token");
+        }
 
-// 5. Define the `updateAppointment` Method:
-//    - Handles HTTP PUT requests to modify an existing appointment.
-//    - Accepts a validated `Appointment` object and a token as input.
-//    - Validates the token for `"patient"` role.
-//    - Delegates the update logic to the `AppointmentService`.
-//    - Returns an appropriate success or failure response based on the update result.
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.plusDays(1).atStartOfDay();
 
+        List<Appointment> appointments = appointmentService.getAppointments(token, start, end, patientName);
+        return ResponseEntity.ok(appointments);
+    }
 
-// 6. Define the `cancelAppointment` Method:
-//    - Handles HTTP DELETE requests to cancel a specific appointment.
-//    - Accepts the appointment ID and a token as path variables.
-//    - Validates the token for `"patient"` role to ensure the user is authorized to cancel the appointment.
-//    - Calls `AppointmentService` to handle the cancellation process and returns the result.
+    // 5. Doctor changes appointment status (e.g., to mark as completed or cancelled)
+    @PutMapping("/status/{id}/{status}/{token}")
+    public ResponseEntity<?> changeStatus(@PathVariable Long id, @PathVariable int status, @PathVariable String token) {
+        if (!sharedService.validateToken(token, "doctor")) {
+            return ResponseEntity.status(401).body("Invalid or expired token");
+        }
 
-
+        appointmentService.changeStatus(id, status, token);
+        return ResponseEntity.ok("Status updated");
+    }
 }
