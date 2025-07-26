@@ -1,4 +1,4 @@
-Smart Clinic Management System
+ClinicSphere
 A simple and complete web application for managing clinics. It helps patients, doctors, and admins with registration, appointments, and prescriptions.
 
 Features
@@ -117,14 +117,14 @@ rust
 Copy
 Edit
 app/
-├── controllers/     -> REST API controllers
-├── models/          -> Entity classes
-├── services/        -> Business logic
-├── repo/            -> Repositories for database access
-├── DTO/             -> Data transfer objects
-├── config/          -> Configuration files
-├── static/          -> Frontend files
-├── templates/       -> Thymeleaf templates (if used)
+├── controllers/ -> REST API controllers
+├── models/ -> Entity classes
+├── services/ -> Business logic
+├── repo/ -> Repositories for database access
+├── DTO/ -> Data transfer objects
+├── config/ -> Configuration files
+├── static/ -> Frontend files
+├── templates/ -> Thymeleaf templates (if used)
 Security
 Passwords are encrypted using BCrypt
 
