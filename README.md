@@ -1,156 +1,159 @@
-# Smart Clinic Management System
+Smart Clinic Management System
+A simple and complete web application for managing clinics. It helps patients, doctors, and admins with registration, appointments, and prescriptions.
 
-A comprehensive clinic management system built with Spring Boot and modern web technologies.
+Features
+Patient registration and login
 
-## 🏥 Features
+Doctor management and login
 
-- **Patient Management**: Register, login, and manage patient profiles
-- **Doctor Management**: Manage doctor profiles and specialties
-- **Appointment Scheduling**: Book and manage appointments
-- **Prescription Management**: Create and manage prescriptions
-- **Admin Dashboard**: Administrative controls and oversight
-- **Secure Authentication**: JWT-based authentication system
+Appointment booking system
 
-## 🛠️ Technology Stack
+Prescription storage
 
-### Backend
+Admin dashboard for managing the system
 
-- **Spring Boot 3.4.4**: Main framework
-- **Spring Data JPA**: Database operations
-- **MySQL**: Primary database
-- **MongoDB**: For prescription storage
-- **Spring Security**: Authentication and authorization
-- **JWT**: Token-based authentication
-- **Lombok**: Reduce boilerplate code
+Secure login using JWT (token-based authentication)
 
-### Frontend
+Technologies Used
+Backend
+Java 17
 
-- **HTML5/CSS3**: Structure and styling
-- **Vanilla JavaScript**: Client-side functionality
-- **Responsive Design**: Mobile-friendly interface
+Spring Boot
 
-## 🚀 Quick Start
+Spring Data JPA
 
-### Prerequisites
+Spring Security
 
-- Java 17 or higher
-- MySQL 8.0+
-- Maven 3.6+
-- Node.js (for development server)
+MySQL (for main data)
 
-### Installation
+MongoDB (for storing prescriptions)
 
-1. **Clone the repository**
+JWT for authentication
 
-   ```bash
-   git clone <repository-url>
-   cd okssu-java-database-capstone-template-main
-   ```
+Lombok (to reduce extra code)
 
-2. **Set up environment variables**
-   Create a `.env` file or set environment variables:
+Frontend
+HTML and CSS
 
-   ```bash
-   export DB_USERNAME=your_mysql_username
-   export DB_PASSWORD=your_mysql_password
-   export JWT_SECRET=your_super_secret_jwt_key
-   export MONGODB_URI=mongodb://localhost:27017/prescriptions
-   ```
+JavaScript
 
-3. **Create MySQL database**
+Designed to work on both desktop and mobile
 
-   ```sql
-   CREATE DATABASE cms;
-   ```
+How to Run the Project
+Requirements
+Java 17 or higher
 
-4. **Run the application**
+MySQL 8 or higher
 
-   ```bash
-   cd app
-   mvn spring-boot:run
-   ```
+MongoDB installed
 
-5. **Access the application**
-   - Frontend: http://localhost:8085
-   - Health Check: http://localhost:8085/health
-   - API Base: http://localhost:8085
+Maven installed
 
-## 📁 Project Structure
+Node.js (only if you’re using a development server for frontend)
 
-```
+Steps
+Clone the project
+
+bash
+Copy
+Edit
+git clone <your-repository-link>
+cd okssu-java-database-capstone-template-main
+Set environment variables
+
+You can create a .env file or manually set these:
+
+ini
+Copy
+Edit
+DB_USERNAME=your_mysql_username  
+DB_PASSWORD=your_mysql_password  
+JWT_SECRET=your_jwt_secret  
+MONGODB_URI=mongodb://localhost:27017/prescriptions
+Create a MySQL database
+
+pgsql
+Copy
+Edit
+CREATE DATABASE cms;
+Start the backend
+
+arduino
+Copy
+Edit
+cd app
+mvn spring-boot:run
+Open your browser
+
+Visit the app at http://localhost:8085
+
+API Endpoints
+Patient
+POST /patient/register - Register new patient
+
+POST /patient/login - Patient login
+
+GET /patient/me/{token} - Get patient profile
+
+GET /patient/appointments/{token} - View appointments
+
+Doctor
+POST /doctor/register - Register new doctor
+
+POST /doctor/login - Doctor login
+
+GET /doctor/appointments/{token} - View doctor’s appointments
+
+Admin
+POST /admin/login - Admin login
+
+GET /admin/dashboard/{token} - View dashboard
+
+Misc
+GET /health - Check if app is running
+
+Project Folder Structure
+rust
+Copy
+Edit
 app/
-├── src/main/java/com/project/back_end/
-│   ├── controllers/     # REST API controllers
-│   ├── models/         # Entity classes
-│   ├── services/       # Business logic
-│   ├── repo/          # Data access layer
-│   ├── DTO/           # Data Transfer Objects
-│   └── config/        # Configuration classes
-├── src/main/resources/
-│   ├── static/        # Frontend assets
-│   └── templates/     # Thymeleaf templates
-```
+├── controllers/     -> REST API controllers
+├── models/          -> Entity classes
+├── services/        -> Business logic
+├── repo/            -> Repositories for database access
+├── DTO/             -> Data transfer objects
+├── config/          -> Configuration files
+├── static/          -> Frontend files
+├── templates/       -> Thymeleaf templates (if used)
+Security
+Passwords are encrypted using BCrypt
 
-## 🔐 Security Features
+JWT used to protect all endpoints
 
-- **Password Hashing**: BCrypt encryption for passwords
-- **JWT Authentication**: Secure token-based authentication
-- **Input Validation**: Comprehensive validation using Jakarta Validation
-- **CORS Configuration**: Proper cross-origin resource sharing setup
+User input is validated
 
-## 📋 API Endpoints
+CORS is configured to allow frontend access
 
-### Patient Endpoints
+Running Tests
+Use this command to run tests:
 
-- `POST /patient/register` - Register new patient
-- `POST /patient/login` - Patient login
-- `GET /patient/me/{token}` - Get patient details
-- `GET /patient/appointments/{token}` - Get patient appointments
-
-### Doctor Endpoints
-
-- `POST /doctor/register` - Register new doctor
-- `POST /doctor/login` - Doctor login
-- `GET /doctor/appointments/{token}` - Get doctor appointments
-
-### Admin Endpoints
-
-- `POST /admin/login` - Admin login
-- `GET /admin/dashboard/{token}` - Admin dashboard
-
-### Health Check
-
-- `GET /health` - Application health status
-
-## 🧪 Testing
-
-Run tests with Maven:
-
-```bash
+bash
+Copy
+Edit
 mvn test
-```
+Contributing
+If you want to help:
 
-## 🔧 Configuration
+Fork the repository
 
-Key configuration properties in `application.properties`:
+Create a new branch
 
-- Database connection settings
-- JWT secret and expiration
-- Server port (8085)
-- CORS origins
+Make your changes
 
-## 📝 Contributing
+Push and submit a pull request
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+License
+This project is under the MIT License.
 
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🤝 Support
-
-For support and questions, please open an issue in the repository.
+Support
+If you have questions or find a bug, feel free to open an issue.
