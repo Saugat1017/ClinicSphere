@@ -1,101 +1,154 @@
-# Smart Clinic System: Database Schema Design
+# Database Schema Design
 
-## MySQL Database Design
+## Overview
 
-### 1. `patients` Table
+The Smart Clinic Management System uses a hybrid database approach:
 
-| Column Name | Data Type         | Constraints                 | Description                        |
-| ----------- | ----------------- | --------------------------- | ---------------------------------- |
-| patient_id  | INT               | PRIMARY KEY, AUTO_INCREMENT | Unique patient identifier          |
-| first_name  | VARCHAR(50)       | NOT NULL                    | Patient's first name               |
-| last_name   | VARCHAR(50)       | NOT NULL                    | Patient's last name                |
-| dob         | DATE              | NOT NULL                    | Date of birth                      |
-| gender      | ENUM('M','F','O') | NOT NULL                    | Gender (M=Male, F=Female, O=Other) |
-| email       | VARCHAR(100)      | NOT NULL, UNIQUE            | Patient's email address            |
-| phone       | VARCHAR(20)       |                             | Contact number                     |
-| address     | VARCHAR(255)      |                             | Home address                       |
+- **MySQL**: Primary database for user management and appointments
+- **MongoDB**: Document storage for prescriptions
 
-### 2. `doctors` Table
+## MySQL Schema
 
-| Column Name | Data Type    | Constraints                 | Description              |
-| ----------- | ------------ | --------------------------- | ------------------------ |
-| doctor_id   | INT          | PRIMARY KEY, AUTO_INCREMENT | Unique doctor identifier |
-| first_name  | VARCHAR(50)  | NOT NULL                    | Doctor's first name      |
-| last_name   | VARCHAR(50)  | NOT NULL                    | Doctor's last name       |
-| specialty   | VARCHAR(100) | NOT NULL                    | Medical specialty        |
-| email       | VARCHAR(100) | NOT NULL, UNIQUE            | Doctor's email address   |
-| phone       | VARCHAR(20)  |                             | Contact number           |
+### Patient Table
 
-### 3. `appointments` Table
+```sql
+CREATE TABLE patient (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(10) NOT NULL,
+    address VARCHAR(255) NOT NULL
+);
+```
 
-| Column Name      | Data Type                                 | Constraints                 | Description                       |
-| ---------------- | ----------------------------------------- | --------------------------- | --------------------------------- |
-| appointment_id   | INT                                       | PRIMARY KEY, AUTO_INCREMENT | Unique appointment identifier     |
-| patient_id       | INT                                       | NOT NULL, FOREIGN KEY       | References `patients(patient_id)` |
-| doctor_id        | INT                                       | NOT NULL, FOREIGN KEY       | References `doctors(doctor_id)`   |
-| appointment_time | DATETIME                                  | NOT NULL                    | Scheduled date and time           |
-| status           | ENUM('scheduled','completed','cancelled') | NOT NULL                    | Appointment status                |
-| notes            | TEXT                                      |                             | Additional notes                  |
+### Doctor Table
 
-### 4. `admin` Table
+```sql
+CREATE TABLE doctor (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    specialty VARCHAR(50) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(10) NOT NULL
+);
 
-| Column Name   | Data Type             | Constraints                 | Description             |
-| ------------- | --------------------- | --------------------------- | ----------------------- |
-| admin_id      | INT                   | PRIMARY KEY, AUTO_INCREMENT | Unique admin identifier |
-| username      | VARCHAR(50)           | NOT NULL, UNIQUE            | Admin username          |
-| password_hash | VARCHAR(255)          | NOT NULL                    | Hashed password         |
-| email         | VARCHAR(100)          | NOT NULL, UNIQUE            | Admin email address     |
-| role          | ENUM('super','staff') | NOT NULL                    | Admin role              |
+CREATE TABLE doctor_available_times (
+    doctor_id BIGINT,
+    available_times TIME,
+    FOREIGN KEY (doctor_id) REFERENCES doctor(id)
+);
+```
 
-<!--
-Justification:
-- Used INT and AUTO_INCREMENT for primary keys for simplicity and performance.
-- Used ENUM for fields with limited options (gender, status, role) for data integrity.
-- Foreign keys in `appointments` ensure referential integrity.
-- Unique constraints on emails and usernames to prevent duplicates.
--->
+### Appointment Table
 
----
+```sql
+CREATE TABLE appointment (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    doctor_id BIGINT NOT NULL,
+    patient_id BIGINT NOT NULL,
+    appointment_time DATETIME NOT NULL,
+    status INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (doctor_id) REFERENCES doctor(id),
+    FOREIGN KEY (patient_id) REFERENCES patient(id)
+);
+```
 
-## MongoDB Collection Design
+### Admin Table
 
-### Collection: `prescriptions`
+```sql
+CREATE TABLE admin (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
+```
 
-A prescription is often best modeled as a document because it may contain nested medication lists, dosage instructions, and references to both patient and doctor.
+## MongoDB Collections
 
-#### Example Document
+### Prescriptions Collection
 
 ```json
 {
-  "_id": "665a1b2c3d4e5f6a7b8c9d0e",
-  "patient_id": 101, // Reference to MySQL patients.patient_id
-  "doctor_id": 12, // Reference to MySQL doctors.doctor_id
-  "date_issued": "2024-06-01T10:30:00Z",
+  "_id": "ObjectId",
+  "patientId": "Long",
+  "doctorId": "Long",
   "medications": [
     {
-      "name": "Amoxicillin",
-      "dosage": "500mg",
-      "frequency": "3 times a day",
-      "duration": "7 days"
-    },
-    {
-      "name": "Ibuprofen",
-      "dosage": "200mg",
-      "frequency": "as needed",
-      "duration": "5 days"
+      "name": "String",
+      "dosage": "String",
+      "frequency": "String",
+      "duration": "String"
     }
   ],
-  "notes": "Take with food. Return for follow-up in 1 week.",
-  "pharmacy": {
-    "name": "City Pharmacy",
-    "address": "123 Main St, Springfield"
-  }
+  "instructions": "String",
+  "prescribedDate": "Date",
+  "validUntil": "Date"
 }
 ```
 
-<!--
-Justification:
-- Embedded array for medications allows flexible number of drugs per prescription.
-- Nested pharmacy object for extensibility (e.g., contact info).
-- patient_id and doctor_id reference relational data, supporting hybrid SQL/NoSQL design.
--->
+## Relationships
+
+1. **Patient ↔ Appointment**: One-to-Many
+
+   - A patient can have multiple appointments
+   - Each appointment belongs to one patient
+
+2. **Doctor ↔ Appointment**: One-to-Many
+
+   - A doctor can have multiple appointments
+   - Each appointment belongs to one doctor
+
+3. **Doctor ↔ Available Times**: One-to-Many
+   - A doctor can have multiple available time slots
+   - Each time slot belongs to one doctor
+
+## Indexes
+
+### Recommended Indexes
+
+```sql
+-- Patient table
+CREATE INDEX idx_patient_email ON patient(email);
+
+-- Doctor table
+CREATE INDEX idx_doctor_email ON doctor(email);
+CREATE INDEX idx_doctor_specialty ON doctor(specialty);
+
+-- Appointment table
+CREATE INDEX idx_appointment_doctor ON appointment(doctor_id);
+CREATE INDEX idx_appointment_patient ON appointment(patient_id);
+CREATE INDEX idx_appointment_time ON appointment(appointment_time);
+CREATE INDEX idx_appointment_status ON appointment(status);
+```
+
+## Data Validation Rules
+
+### Patient
+
+- Email must be unique and valid format
+- Phone must be exactly 10 digits
+- Name must be 3-100 characters
+- Password must be at least 6 characters (hashed)
+
+### Doctor
+
+- Email must be unique and valid format
+- Phone must be exactly 10 digits
+- Specialty must be 3-50 characters
+- Available times stored as separate table
+
+### Appointment
+
+- Appointment time must be in the future
+- Status: 0 = pending, 1 = completed, 2 = cancelled
+- Doctor and patient must exist
+
+## Security Considerations
+
+1. **Password Storage**: All passwords are hashed using BCrypt
+2. **JWT Tokens**: Used for authentication with configurable expiration
+3. **Input Validation**: All inputs validated using Jakarta Validation
+4. **SQL Injection Prevention**: Using JPA/Hibernate with parameterized queries
+5. **CORS Configuration**: Properly configured for frontend integration

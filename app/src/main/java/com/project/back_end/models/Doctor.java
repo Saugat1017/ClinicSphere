@@ -54,5 +54,10 @@ public class Doctor {
     @ElementCollection
     private List<LocalTime> availableTimes;
 
+    public Doctor get(int i) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'get'");
+    }
+
 
 }

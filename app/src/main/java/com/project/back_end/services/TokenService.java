@@ -8,6 +8,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -21,7 +22,11 @@ public class TokenService {
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
 
-    private String jwtSecret = "<KEY>";  // Replace with actual secret or inject via @Value
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
+    @Value("${jwt.expiration:604800000}")
+    private long jwtExpiration;
 
     private Key key;
 
@@ -30,15 +35,15 @@ public class TokenService {
         this.key = getSigningKey();
     }
 
-    // 3. Get Signing Key
+    // Get Signing Key
     public Key getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
-    // 4. Generate JWT token
+    // Generate JWT token
     public String generateToken(String email) {
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 7); // 7 days
+        Date expiry = new Date(now.getTime() + jwtExpiration);
 
         return Jwts.builder()
                 .setSubject(email)
@@ -48,28 +53,34 @@ public class TokenService {
                 .compact();
     }
 
-    // 5. Extract email from JWT
+    // Extract email from JWT
     public String extractEmail(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
-    // 6. Validate token based on role
+    // Validate token based on role
     public boolean validateToken(String token, String role) {
         try {
-            String email = extractEmail(token);
+            String subject = extractEmail(token);
+            if (subject == null)
+                return false;
 
             switch (role.toLowerCase()) {
                 case "admin":
-                    return adminRepository.findByUsername(email) != null;
+                    return adminRepository.findByUsername(subject) != null;
                 case "doctor":
-                    return doctorRepository.findByEmail(email) != null && !doctorRepository.findByEmail(email).isEmpty();
+                    return doctorRepository.findByEmail(subject) != null;
                 case "patient":
-                    return patientRepository.findByEmail(email) != null;
+                    return patientRepository.findByEmail(subject) != null;
                 default:
                     return false;
             }

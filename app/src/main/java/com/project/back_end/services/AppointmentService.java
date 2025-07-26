@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -109,8 +110,10 @@ public class AppointmentService {
         return patientRepository.findByEmail(email);
     }
 
-    private Doctor getCurrentDoctor(String token) {
-        String email = tokenService.extractEmail(token);
-        return doctorRepository.findByEmail(email).get(0); // assuming list
+   private Doctor getCurrentDoctor(String token) {
+    String email = tokenService.extractEmail(token);
+    return doctorRepository.findByEmail(email)
+         .orElseThrow(() -> new NoSuchElementException("Doctor not found for token"));
+
     }
 }

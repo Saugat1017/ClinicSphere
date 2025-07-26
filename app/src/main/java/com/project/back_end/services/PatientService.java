@@ -22,11 +22,14 @@ public class PatientService {
     private final PatientRepository patientRepository;
     private final AppointmentRepository appointmentRepository;
     private final TokenService tokenService;
+    private final PasswordService passwordService;
 
     // 1. Create a new patient
     @Transactional
     public int createPatient(Patient patient) {
         try {
+            // Hash the password before saving
+            patient.setPassword(passwordService.hashPassword(patient.getPassword()));
             patientRepository.save(patient);
             return 1;
         } catch (Exception e) {
@@ -97,6 +100,14 @@ public class PatientService {
         return getCurrentPatient(token);
     }
 
+    // 7. Verify patient login
+    public boolean verifyPatientLogin(String email, String password) {
+        Patient patient = patientRepository.findByEmail(email);
+        if (patient == null)
+            return false;
+        return passwordService.verifyPassword(password, patient.getPassword());
+    }
+
     // 🔐 Private helper — extract patient from token
     private Patient getCurrentPatient(String token) {
         String email = tokenService.extractEmail(token);
@@ -111,6 +122,7 @@ public class PatientService {
                 .status(appointment.getStatus())
                 .build()).collect(Collectors.toList());
     }
+
     @Transactional(readOnly = true)
     public List<Patient> getAllPatients() {
         return patientRepository.findAll();
